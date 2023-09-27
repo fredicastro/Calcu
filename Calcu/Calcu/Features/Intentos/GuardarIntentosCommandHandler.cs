@@ -1,16 +1,20 @@
 ﻿using Calcu.Features.Intentos.Dto;
+using Calcu.Infraestructure;
 using Calcu.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace Calcu.Features.Intentos
 {
     public class GuardarIntentosCommandHandler : IRequestHandler<GuardarIntentosCommand, List<IntentosCalculo>>
     {
         private readonly FmcDbContext _dbContext;
-        public GuardarIntentosCommandHandler(FmcDbContext dbContext) 
+        private readonly IMessageProducer _messageProducer;
+        public GuardarIntentosCommandHandler(FmcDbContext dbContext, IMessageProducer messageProducer) 
         {
-        _dbContext = dbContext;
+            _dbContext = dbContext;
+            _messageProducer = messageProducer;
         }                   
         //public async Task<int> Handle(GuardarIntentosCommand request, CancellationToken cancellationToken)
         public async Task<List<IntentosCalculo>> Handle(GuardarIntentosCommand request, CancellationToken cancellationToken)
@@ -34,8 +38,11 @@ namespace Calcu.Features.Intentos
                 };
                 _dbContext.IntentosCalculo.Add(Intento);
                 await _dbContext.SaveChangesAsync(cancellationToken);
-                return _dbContext.IntentosCalculo.Where(a => a.IntentosCalculoId == Intento.IntentosCalculoId).ToList();
+                var nuevo_intento = _dbContext.IntentosCalculo.Where(a => a.IntentosCalculoId == Intento.IntentosCalculoId).ToList();
 
+                var message = JsonConvert.SerializeObject(nuevo_intento);
+                _messageProducer.Produce(message);
+                return nuevo_intento;
 
             }
             catch (Exception ex) 

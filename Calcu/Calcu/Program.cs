@@ -1,4 +1,5 @@
 using Calcu;
+using Calcu.Infraestructure;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
@@ -14,8 +15,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<FmcDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 //infraestructure
-//builder.Services.AddScoped<IMessageProducer, TransactionPublisher>();
-//builder.Services.AddScoped<IMessageConsumer, TransactionConsumer>();
+builder.Services.AddScoped<IMessageProducer, FmcPublisher>();
+builder.Services.AddScoped<IMessageConsumer, FmcConsumer>();
 
 var app = builder.Build();
 
